@@ -9,10 +9,16 @@ var token = config.token;
 // Setup polling way
 var bot = new TelegramBot(token, {polling: true});
 
+bot.onText(/\/start/, function(msg, match) {
+	bot.sendMessage(msg.from.id, "send a /track command with the tracking number like /track abcd to begin tracking, \nuse /subscribe to receive tracking updates");
 
-bot.onText(/\/track (.+)/, function (msg, match) {
+})
+
+bot.onText(/\/track *(.*)$/, function (msg, match) {
+	console.log("match track");
 	var fromId = msg.from.id;
 	var trackingCode=match[1];
+
 	getTracking(fromId,trackingCode,function(err,message){
 		if(err){
 			log.error(err);
@@ -23,22 +29,28 @@ bot.onText(/\/track (.+)/, function (msg, match) {
 
 	})
 });
-bot.onText(/\/subscribe (.+)/, function (msg, match) {
+bot.onText(/\/subscribe *(.*)$/, function (msg, match) {
 	var fromId = msg.from.id;
 	var trackingCode=match[1];
+
 	getTracking(fromId,trackingCode,function(err,message,trackingInfo){
 		if(err){
 			log.error(err);
 			return bot.sendMessage(fromId,err.error);
 		}
 		log.info("Message sent for user ",fromId);
+
 		bot.sendMessage(fromId, message,{parse_mode:"Markdown"});
 		//TODO insert mongo
 		console.log("Insert in mongo",trackingInfo);
 	})
 });
 
+console.log("bot started");
+
 function getTracking(fromId,trackingCode,cb){
+	console.log("tracking ", trackingCode);
+
 	if (!trackingCode || trackingCode.trim()==""){
 		cb({error:"No tracking code was provided"});
 	}
@@ -80,6 +92,10 @@ function getTracking(fromId,trackingCode,cb){
 			if (i==0) message+=activity.details+" - _"+activity.location + "_ - "+new Date(activity.timestamp).toISOString().replace('T', ' ').substr(0, 19)+ "\n";
 			else message+=activity.details+" - _"+activity.location + "_ - "+ new Date(activity.timestamp).toISOString().replace('T', ' ').substr(0, 19)+ "\n";
 		});
+
+		if (message == "") {
+			message = "no activity";
+		}
 
 		return cb(null,message,parsedBody);
 	});
