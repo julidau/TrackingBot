@@ -1,11 +1,10 @@
 var TelegramBot = require('node-telegram-bot-api');
-var config= require("./config")
 var request= require("request");
 var shipit= require("shipit");
 var log= require("captains-log")();
 var _= require("lodash");
 var SUPPORTED_CARRIERS=["dhl"];
-var token = config.token;
+var token = process.env["BOT_TOKEN"];
 // Setup polling way
 var bot = new TelegramBot(token, {polling: true});
 
